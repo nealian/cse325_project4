@@ -26,7 +26,7 @@ dummy_impl.o: dummy_impl.c scheduler.h
 	$(CC) $(CCOPTS) -o $@ dummy_impl.c
 
 lab4_tests.o: lab4_tests.c list.h scheduler.h testrunner.h
-	$(CC) $(CCOPTS) -o $@ smp4_tests.c
+	$(CC) $(CCOPTS) -o $@ lab4_tests.c
 
 testrunner.o: testrunner.c testrunner.h
 	$(CC) $(CCOPTS) -o $@ testrunner.c
