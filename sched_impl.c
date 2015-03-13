@@ -20,6 +20,14 @@ static void destroy_thread_info(thread_info_t *info) {
   // TODO
 }
 
+static void enter_sched_queue(thread_info_t *info) {
+  // TODO
+}
+
+static void leave_sched_queue(thread_info_t *info) {
+  // TODO
+}
+
 static void wait_for_cpu(thread_info_t *info) {
   // TODO
 }
@@ -55,12 +63,12 @@ static void wait_for_queue(sched_queue_t *queue) {
 
 /* Static initialization of scheduling strategies */
 sched_impl_t sched_fifo = {
-  { init_thread_info, destroy_thread_info, fifo_enter_queue, fifo_leave_queue,
+  { init_thread_info, destroy_thread_info, enter_sched_queue, leave_sched_queue,
     wait_for_cpu, release_cpu }, 
   { init_sched_queue, destroy_sched_queue, fifo_wake_worker, fifo_wait,
     next_worker, wait_for_queue } },
 sched_rr = {
-  { init_thread_info, destroy_thread_info, rr_enter_queue, rr_leave_queue,
+  { init_thread_info, destroy_thread_info, enter_sched_queue, leave_sched_queue,
     wait_for_cpu, release_cpu },
   { init_sched_queue, destroy_sched_queue, rr_wake_worker, rr_wait,
     next_worker, wait_for_queue } };
