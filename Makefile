@@ -3,7 +3,7 @@ CCOPTS = -Wall -c -g -ggdb
 LINKOPTS = -Wall -g -ggdb -lpthread
 
 EXEC=scheduler
-OBJECTS=scheduler.o sched_impl.o list.o dummy_impl.o lab4_tests.o testrunner.o
+OBJECTS=scheduler.o sched_impl.o list.o dummy_impl.o lab4_tests.o testrunner.o fifo_impl.o rr_impl.o
 
 all: $(EXEC)
 
@@ -18,6 +18,12 @@ scheduler.o: scheduler.c scheduler.h sched_impl.h
 
 sched_impl.o: sched_impl.c scheduler.h sched_impl.h
 	$(CC) $(CCOPTS) -o $@ sched_impl.c
+
+fifo_impl.o: fifo_impl.c fifo_impl.h sched_impl.h
+	$(CC) $(CCOPTS) -o $@ fifo_impl.c
+
+rr_impl.o: rr_impl.c rr_impl.h sched_impl.h
+	$(CC) $(CCOPTS) -o $@ rr_impl.c
 
 list.o: list.c list.h
 	$(CC) $(CCOPTS) -o $@ list.c
