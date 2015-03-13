@@ -7,4 +7,18 @@
 
 #include "fifo_impl.h"
 
-// TODO
+void fifo_enter_queue(thread_info_t *info) {
+  // TODO
+}
+
+void fifo_leave_queue(thread_info_t *info) {
+  // TODO
+}
+
+void fifo_wake_worker(thread_info_t *info) {
+  // TODO
+}
+
+void fifo_wait(sched_queue_t *queue) {
+  // TODO
+}
