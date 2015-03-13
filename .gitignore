@@ -29,6 +29,12 @@
 *.hex
 scheduler
 
+# LaTeX/AUCTeX misc and output
+*.pdf
+*.aux
+*.log
+auto
+
 # Temporary files
 *~
 *#
