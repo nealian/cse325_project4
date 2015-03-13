@@ -2,6 +2,9 @@ CC = gcc
 CCOPTS = -Wall -c -g -ggdb
 LINKOPTS = -Wall -g -ggdb -lpthread
 
+TEX = pdflatex
+README = README.tex
+
 EXEC=scheduler
 OBJECTS=scheduler.o sched_impl.o list.o dummy_impl.o lab4_tests.o testrunner.o
 
@@ -36,9 +39,14 @@ test: scheduler
 	- ./scheduler -test -f10 rr
 	- killall scheduler
 
+doc: $(README)
+	$(TEX) $(README)
+
 clean:
 	- $(RM) $(EXEC)
 	- $(RM) $(OBJECTS)
 	- $(RM) *~
 	- $(RM) core.*
 	- $(RM) lab4.in lab4.out lab4.err
+	- $(RM) *.aux *.log *.pdf
+	- $(RM) -r auto
