@@ -6,6 +6,7 @@
 \usepackage{tikz} % Graphics powered by TikZ!
 \usepackage{xcolor} % More colors
 \usepackage{listings} % For shell output
+\usepackage{nameref} % Reference sections by name, since we're avoiding section numbering
 
 \usetikzlibrary{automata} % Handy stuff for state machine diagrams
 
@@ -130,6 +131,32 @@ Another example, this time using \textit{RR} scheduling:
 
 %%% DESIGN %%%
 \section*{Design \& Implementation}
+% Be sure and update this as we make progress...
+\subsection*{Organization}
+The execution of the project -- set-up, tear-down, and worker and scheduler routines -- is handled entirely by the framework established in the code given to us as part of the assignment. All of the functionality we've implemented is integrated modularly into the project by way of the function pointers contained in the \texttt{sched\_impl\_t} structures \texttt{sched\_fifo} and \texttt{sched\_rr} for the \textit{FIFO} and \textit{RR} scheduling policies, respectively. From a practical perspective, this is effectively an object-oriented schema, with \texttt{sched\_fifo} and \texttt{sched\_rr} inheriting from a more general implementation:
+
+% TODO: diagram showing that thing what i just said
+
+\subsection*{\textit{FIFO} Scheduling Policy}
+% TODO
+
+\subsection*{\textit{RR} Scheduling Policy}
+% TODO
+
+\subsection*{Scheduling Queue}
+The scheduling queue is a simple FIFO queue implemented as a wrapper around a doubly-linked list, using the implementation provided in \texttt{list.h}. For both scheduling policies, the functionality of the queue itself is identical, as all policy-specific functionality has been offloaded to the worker-thread control system. The queue structure \texttt{sched\_queue}, typedeffed elsewhere as \texttt{sched\_queue\_t}, is implemented in \texttt{sched\_impl.c}, with all access methods passed as function pointers to the various scheduler implementations. These methods are all synchronized as described in \textbf{\nameref{design:sync}}, and are as follows:
+
+\begin{itemize}
+  \item \texttt{sched\_impl.c:init\_sched\_queue()} initializes and allocates space for an empty queue of a given size.
+  \item \texttt{sched\_impl.c:destroy\_sched\_queue()} frees all resources used by the queue and any elements that may remain in the queue.
+  \item \texttt{sched\_impl.c:enter\_sched\_queue()} inserts an element at the tail of the queue.
+  \item \texttt{sched\_impl.c:leave\_sched\_queue()} removes a given element from the queue.
+\end{itemize}
+
+It should be noted that the elements of the queue are wrappers of type \texttt{list\_elem\_t}. The thread info items of type \texttt{thread\_info\_t} that are inserted into the queue keep track of their own wrappers as well as a pointer to the queue. This isn't an ideal design scheme, but is done to conform to the provided worker thread operation interface which passes only the thread info instance to queue methods.
+
+\subsection*{Access Control \& Synchronization}
+\label{design:sync}
 % TODO
 
 %%% BUGS %%%
