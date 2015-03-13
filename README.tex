@@ -4,8 +4,20 @@
 \usepackage{fourier} % We're using the Utopia font because it's great.
 \usepackage{enumerate} % Allows for custom enumeration types
 \usepackage{tikz} % Graphics powered by TikZ!
+\usepackage{xcolor} % More colors
+\usepackage{listings} % For shell output
 
 \usetikzlibrary{automata} % Handy stuff for state machine diagrams
+
+\lstdefinestyle{ShellStyle} {
+  basicstyle=\small\ttfamily,
+  numbers=none,
+  frame=tblr,
+  columns=fullflexible,
+  backgroundcolor=\color{blue!10},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth
+}
 
 %\allsectionsfont{\centering \normalfont\scshape} % Center and semi-cap section titles
 \newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Horizontal rule with weight arg
@@ -25,19 +37,96 @@
 \maketitle
 
 %%% INTRODUCTION %%%
-% TODO
+The SANIC TEEM Amazing Thread Scheduling Demonstration for Peace (hereafter referred to as \textit{the program}) is an interactive simulation of user-mode thread scheduling, designed to demonstrate two different thread scheduling policies:
+
+\begin{description}
+  \item[First Come, First Served] or \textit{FIFO}, wherein processes are scheduled to run in the order they arrive in the scheduling queue and will continue running until they either complete or block for I/O, and
+
+  \item[Round Robin] or \textit{RR}, wherein processes are granted CPU time in discrete time slices or \textit{quanta}, after which they are moved to the end of the scheduling queue if they have yet to finish running.
+\end{description}
+
+Most of the codebase of this project was given as part of the lab assignment. We have implemented the functionality of this project in the following files:
+
+\begin{itemize}
+  \item Interface and implementation of scheduling-policy-independent functionality in \texttt{sched\_impl.h} and \texttt{sched\_impl.c}, respectively.
+
+  \item Interface and implementation of \textit{FIFO}-scheduling functionality in \texttt{fifo\_impl.h} and \texttt{fifo\_impl.c}, respectively.
+
+  \item Interface and implementation of \textit{RR}-scheduling functionality in \texttt{rr\_impl.h} and \texttt{rr\_impl.c}, respectively.
+
+  \item Build targets for the added files and this README in the \texttt{Makefile}.
+\end{itemize}
 
 %%% BUILDING %%%
 \section*{Building}
-% TODO
+\begin{itemize}
+  \item \texttt{make} to build the project normally.
+
+  \item \texttt{make test} to run the provided testing harness.
+
+  \item \texttt{make doc} to build this README. Requires \texttt{pdflatex} and a number of \LaTeX\hspace{0em} packages, all of which are included in the popular \textbf{TeX Live} distribution.
+
+  \item \texttt{make clean} to clean up temporary files, build files, and output.
+\end{itemize} 
 
 %%% USAGE %%%
+% Taken from scheduler.c:print_help()
 \section*{Usage}
-% TODO
+\texttt{./scheduler <sched\_impl> <queue\_size> <num\_threads> [iterations]}
+
+\begin{itemize}
+  \item \texttt{sched\_impl} may be \texttt{-fifo} to use \textit{FIFO} scheduling, \texttt{-rr} to use \textit{RR} scheduling, or \texttt{-dummy} to offload thread scheduling to the kernel.
+
+  \item \texttt{queue\_size} is the number of threads that can be in the scheduler at one time.
+
+  \item \texttt{num\_threads} is the number of worker threads to run.
+
+  \item \texttt{iterations} is optionally the number of loops for each worker thread to run.
+\end{itemize}
+
 
 %%% EXAMPLES %%%
+% Taken from the assignment PDF. We could replace this with our own program's output at some point.
 \section*{Examples}
-% TODO
+This first example uses \textit{FIFO} scheduling:
+\begin{lstlisting}[style=ShellStyle]$
+  $ ./scheduler -fifo 1 2 3
+  Main: running 2 workers on 1 queue_size for 3 iterations
+  Main: detaching worker thread 3075984304
+  Main: detaching worker thread 3065494448
+  Main: waiting for scheduler 3086474160
+  Thread 3075984304: in scheduler queue
+  Thread 3075984304: loop 0
+  Thread 3075984304: loop 1
+  Thread 3075984304: loop 2
+  Thread 3075984304: exiting
+  Thread 3065494448: in scheduler queue
+  Thread 3065494448: loop 0
+  Thread 3065494448: loop 1
+  Thread 3065494448: loop 2
+  Thread 3065494448: exiting
+  Scheduler: done!
+\end{lstlisting}
+\pagebreak
+Another example, this time using \textit{RR} scheduling:
+\begin{lstlisting}[style=ShellStyle]$
+  $ ./scheduler -rr 10 2 3
+  Main: running 2 workers on 10 queue_size for 3 iterations
+  Main: detaching worker thread 3075828656
+  Main: detaching worker thread 3065338800
+  Main: waiting for scheduler 3086318512
+  Thread 3075828656: in scheduler queue
+  Thread 3065338800: in scheduler queue
+  Thread 3075828656: loop 0
+  Thread 3065338800: loop 0
+  Thread 3075828656: loop 1
+  Thread 3065338800: loop 1
+  Thread 3075828656: loop 2
+  Thread 3065338800: loop 2
+  Thread 3075828656: exiting
+  Thread 3065338800: exiting
+  Scheduler: done!
+\end{lstlisting}
 
 %%% DESIGN %%%
 \section*{Design \& Implementation}
