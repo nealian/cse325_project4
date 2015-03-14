@@ -24,6 +24,6 @@ void fifo_wait(sched_queue_t *queue) {
   /* Block until worker has finished */
   if(pthread_mutex_lock(worker->yield_cpu)) {
     /* Handle error locking cpu yield */
-    perror("scheduling policy waiting on worker");
+    fprintf(stderr, "FIFO scheduler interrupted while waiting on worker.\n");
   }
 }
