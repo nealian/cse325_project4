@@ -35,24 +35,26 @@ void rr_wait(sched_queue_t *queue) {
 
         if(pthread_mutex_unlock(queue->access_mutex)) {
           /* Handle mutex unlock failure */
-          perror("round robin wait queue mutex unlock");
+          fprintf(stderr, "Couldn't unlock queue access mutex after rotation in RR\n");
         }
 
         if(pthread_mutex_lock(new_head_info->yield_cpu)) {
           /* Handle mutex lock failure */
-          perror("round robin wait cpu yield mutex lock");
+          fprintf(stderr, "Couldn't lock cpu yield in RR\n");
         }
       } else {
         /* Where did it go in the last milliseconds?!? (Shouldn't happen) */
-        perror("round robin wait has worker");
+        /* return, I guess? */
+        return;
       }
 
     } else {
       /* Uh, where'd our worker go? */
-      perror("round robin wait has worker");
+      /* return, I guess? */
+      return;
     }
   } else {
     /* Handle mutex lock failure */
-    perror("round robin wait queue mutex lock");
+    fprintf(stderr, "Couldn't acquire queue access lock for rotation in RR\n");
   }
 }
