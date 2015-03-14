@@ -14,45 +14,28 @@
 #include "sched_impl.h"
 
 void rr_wait(sched_queue_t *queue) {
-  list_elem_t *queue_elem;
-  thread_info_t *new_head_info;
+  list_elem_t *head;
+  thread_info_t *worker;
+
+  /* Get head of queue */
   if(!pthread_mutex_lock(queue->access_mutex)) {
-    /* Current worker is moved to the back of the line */
-    queue_elem = list_get_head(queue->list);
-
-    /* If the queue is empty, the head elem will be NULL */
-    if(queue_elem) {
-      list_remove_elem(queue->list, queue_elem);
-      list_insert_tail(queue->list, queue_elem);
-
-      /* re-use queue_elem for the new head */
-
-      queue_elem = list_get_head(queue->list);
-
-      /* If the queue is empty, the head elem will be NULL */
-      if(queue_elem) {
-        new_head_info = (thread_info_t *) queue_elem->datum;
-
-        if(pthread_mutex_unlock(queue->access_mutex)) {
-          /* Handle mutex unlock failure */
-          perror("round robin wait queue mutex unlock");
-        }
-
-        if(pthread_mutex_lock(new_head_info->yield_cpu)) {
-          /* Handle mutex lock failure */
-          perror("round robin wait cpu yield mutex lock");
-        }
-      } else {
-        /* Where did it go in the last milliseconds?!? (Shouldn't happen) */
-        perror("round robin wait has worker");
-      }
-
+    head = list_get_head(queue->list);
+    if(head) {
+      worker = (thread_info_t*) head->datum;
+      list_remove_elem(queue->list, head);
+      list_insert_tail(queue->list, head);
     } else {
-      /* Uh, where'd our worker go? */
-      perror("round robin wait has worker");
+      /* Queue is empty. Just leave then. */
+      pthread_mutex_unlock(queue->access_mutex);
+      return;
     }
+    pthread_mutex_unlock(queue->access_mutex);
   } else {
-    /* Handle mutex lock failure */
-    perror("round robin wait queue mutex lock");
+    /* Handle queue access lock failure */
+  }
+
+  /* Block until worker has finished */
+  if(!pthread_mutex_lock(worker->yield_cpu)) {
+    /* Error handling */
   }
 }
