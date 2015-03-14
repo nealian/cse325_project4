@@ -119,6 +119,13 @@ static void release_cpu(thread_info_t *info) {
     perror("worker thread release cpu");
   }
 }
+
+static void wake_worker(thread_info_t *info) {
+  if(pthread_mutex_unlock(info->has_cpu)) {
+    /* Handle mutex unlock error */
+    perror("wake worker");
+  }
+}
 /* End worker thread ops block */
 
 /***************************************
@@ -216,10 +223,10 @@ static void wait_for_queue(sched_queue_t *queue) {
 sched_impl_t sched_fifo = {
   { init_thread_info, destroy_thread_info, enter_sched_queue, leave_sched_queue,
     wait_for_cpu, release_cpu }, 
-  { init_sched_queue, destroy_sched_queue, fifo_wake_worker, fifo_wait,
+  { init_sched_queue, destroy_sched_queue, wake_worker, fifo_wait,
     next_worker, wait_for_queue } },
 sched_rr = {
   { init_thread_info, destroy_thread_info, enter_sched_queue, leave_sched_queue,
     wait_for_cpu, release_cpu },
-  { init_sched_queue, destroy_sched_queue, rr_wake_worker, rr_wait,
+  { init_sched_queue, destroy_sched_queue, wake_worker, rr_wait,
     next_worker, wait_for_queue } };
