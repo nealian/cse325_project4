@@ -8,7 +8,12 @@
 \usepackage{listings} % For shell output
 \usepackage{nameref} % Reference sections by name, since we're avoiding section numbering
 
+\usetikzlibrary{positioning} % Relative positioning of nodes
 \usetikzlibrary{automata} % Handy stuff for state machine diagrams
+
+\tikzstyle{every state}=[fill=orange!30, draw=orange, very thick]
+\tikzstyle{lock}=[->, draw=cyan, very thick, every to/.style={bend left=20}]
+\tikzstyle{unlock}=[->, draw=magenta, very thick, every to/.style={bend left=20}]
 
 \lstdefinestyle{ShellStyle} {
   basicstyle=\small\ttfamily,
@@ -157,10 +162,31 @@ It should be noted that the elements of the queue are wrappers of type \texttt{l
 
 \subsection*{Access Control \& Synchronization}
 \label{design:sync}
-% TODO
+Our implementation of access control to the scheduling queue uses a very similar strategy to the buffer access control strategy we implemented for Lab 3. We use two semaphores (referred to as the \textit{production} and \textit{consumption} locks) to synchronize the capacity of the queue, and one mutex access lock to enforce mutual exclusion of queue modification. When the queue is initialized, the production lock is initialized with a value the same as the capacity of the queue, and the consumption lock is initialized with a value of zero (locked). Insertion into the queue locks production and unlocks consumption, and vice-versa for removal of queue elements. The access lock is simply locked for critical sections where the queue is accessed for read/write operations. One new synchronization operation implemented here is the \texttt{wait\_for\_queue} operation, which blocks until there is an element in the queue; this is implemented by waiting for consumption to lock, then releasing the lock as soon as it is acquired. Figure~\ref{fig:qsync} shows the aforementioned capacity synchronization scheme, where semaphores are shown in orange, cyan edges denote the acquisition of a resource by a process, and magenta edges denote the unlocking of a resource by a process.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[node distance = 2cm, auto]
+    \node         (insert)                                     {\texttt{enter\_sched\_queue}};
+    \node[state]  (production)  [below left = of insert]       {\phantom{-}\textit{production}\phantom{-}};
+    \node[state]  (consumption) [below right = of insert]      {\textit{consumption}};
+    \node         (remove)      [below left = of consumption]  {\texttt{leave\_sched\_queue}};
+    \node         (wait)        [below right = of consumption] {\texttt{wait\_for\_queue}};
+
+    \draw[lock]   (production)  to (insert);
+    \draw[unlock] (insert)      to (consumption);
+    \draw[lock]   (consumption) to (remove);
+    \draw[unlock] (remove)      to (production);
+    \draw[lock]   (consumption) to (wait);
+    \draw[unlock] (wait)        to (consumption);
+  \end{tikzpicture}
+  \caption{Scheduling queue capacity synchronization.}
+  \label{fig:qsync}
+\end{figure}
 
 %%% BUGS %%%
 \section*{Known Bugs}
 % TODO
+None known.
 
 \end{document}
