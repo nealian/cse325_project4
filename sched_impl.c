@@ -12,8 +12,6 @@
   All functions here should be independent of scheduling strategy.
 ****************************************/
 static void init_thread_info(thread_info_t *info, sched_queue_t *queue) {
-  // TODO: initialize info
-
   info->queue = queue;
   info->queue_elem = NULL;
 
@@ -27,18 +25,23 @@ static void init_thread_info(thread_info_t *info, sched_queue_t *queue) {
   *(info->has_cpu) = m2;
   if(pthread_mutex_lock(info->has_cpu)) {
     /* Handle mutex lock failure */
-    perror("worker thread wait for cpu");
+    fprintf(stderr, "Couldn't lock initial mutex in worker thread initialization.\n");
   }
 }
 
 static void destroy_thread_info(thread_info_t *info) {
   info->queue = NULL;
   info->queue_elem = NULL;
+
+  /* The yield_cpu mutex should be in the locked state at end of thread. */
+  if(pthread_mutex_unlock(info->yield_cpu)) {
+    fprintf(stderr, "Couldn't unlock cpu-yield mutex on thread destruction.\n");
+  }
   
   if(pthread_mutex_destroy(info->has_cpu)
      || pthread_mutex_destroy(info->yield_cpu)) {
     /* Handle errors on mutex destruction */
-    perror("worker thread mutex destruction");
+    fprintf(stderr, "Error destroying worker thread mutexes.\n");
   }
 
   free(info->has_cpu);
@@ -67,11 +70,11 @@ static void enter_sched_queue(thread_info_t *info) {
 
       if(pthread_mutex_unlock(info->queue->access_mutex)) {
         /* Handle mutex unlock failure */
-        perror("scheduling queue access mutex unlock");
+        fprintf(stderr, "Couldn't unlock queue access mutex post-insertion.\n");
       }
     } else {
       /* Handle mutex lock failure */
-      perror("scheduling queue access mutex lock");
+      fprintf(stderr, "Couldn't acquire queue access lock for insertion.\n");
     }
   } else {
     /* Handle semaphore wait failure */
@@ -95,11 +98,11 @@ static void leave_sched_queue(thread_info_t *info) {
 
       if(pthread_mutex_unlock(info->queue->access_mutex)) {
         /* Handle mutex unlock failure */
-        perror("scheduling queue access mutex unlock");
+        fprintf(stderr, "Couldn't unlock queue access mutex post-removal.\n");
       }
     } else {
       /* Handle mutex lock failure */
-      perror("scheduling queue access mutex lock");
+      fprintf(stderr, "Couldn't acquire queue access lock for removal.\n");
     }
   } else {
     /* Handle semaphore lock failure */
@@ -112,7 +115,7 @@ static void wait_for_cpu(thread_info_t *info) {
   /* Wait for CPU lock to release */
   if(pthread_mutex_lock(info->has_cpu)) {
     /* Handle mutex lock failure */
-    perror("worker thread wait for cpu");
+    fprintf(stderr, "Worker thread interrupted while waiting for cpu.\n");
   }
 }
 
@@ -120,14 +123,14 @@ static void release_cpu(thread_info_t *info) {
   /* Unlock thread yield */
   if(pthread_mutex_unlock(info->yield_cpu)) {
     /* Handle mutex unlock failure */
-    perror("worker thread release cpu");
+    fprintf(stderr, "Worker thread couldn't release lock on cpu.\n");
   }
 }
 
 static void wake_worker(thread_info_t *info) {
   if(pthread_mutex_unlock(info->has_cpu)) {
     /* Handle mutex unlock error */
-    perror("wake worker");
+    fprintf(stderr, "Scheduler couldn't release lock on worker thread.\n");
   }
 }
 /* End worker thread ops block */
@@ -173,7 +176,7 @@ static void destroy_sched_queue(sched_queue_t *queue) {
   /* Close queue access mutex */
   if(pthread_mutex_destroy(queue->access_mutex)) {
     /* Handle errors on mutex destruction */
-    perror("scheduling queue access mutex destruction");
+    fprintf(stderr, "Couldn't destroy queue access lock.\n");
   }
 
   /* Free remaining resources */
@@ -198,11 +201,11 @@ static thread_info_t* next_worker(sched_queue_t *queue) {
 
     if(pthread_mutex_unlock(queue->access_mutex)) {
       /* Handle mutex unlock failure */
-      perror("scheduling queue access mutex unlock");
+      fprintf(stderr, "Couldn't unlock queue access mutex after reading.\n");
     }
   } else {
     /* Handle mutex lock failure */
-    perror("scheduling queue access mutex lock");
+    fprintf(stderr, "Couldn't acquire queue access lock for reading.\n");
   }
 
   return next;
