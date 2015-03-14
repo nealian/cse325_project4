@@ -138,15 +138,7 @@ Another example, this time using \textit{RR} scheduling:
 \section*{Design \& Implementation}
 % Be sure and update this as we make progress...
 \subsection*{Organization}
-The execution of the project -- set-up, tear-down, and worker and scheduler routines -- is handled entirely by the framework established in the code given to us as part of the assignment. All of the functionality we've implemented is integrated modularly into the project by way of the function pointers contained in the \texttt{sched\_impl\_t} structures \texttt{sched\_fifo} and \texttt{sched\_rr} for the \textit{FIFO} and \textit{RR} scheduling policies, respectively. From a practical perspective, this is effectively an object-oriented schema, with \texttt{sched\_fifo} and \texttt{sched\_rr} inheriting from a more general implementation:
-
-% TODO: diagram showing that thing what i just said
-
-\subsection*{\textit{FIFO} Scheduling Policy}
-% TODO
-
-\subsection*{\textit{RR} Scheduling Policy}
-% TODO
+The execution of the project -- set-up, tear-down, and worker and scheduler routines -- is handled entirely by the framework established in the code given to us as part of the assignment. All of the functionality we've implemented is integrated modularly into the project by way of the function pointers contained in the \texttt{sched\_impl\_t} structures \texttt{sched\_fifo} and \texttt{sched\_rr} for the \textit{FIFO} and \textit{RR} scheduling policies, respectively. From a practical perspective, this is effectively an object-oriented schema, with \texttt{sched\_fifo} and \texttt{sched\_rr} inheriting from a more general implementation.
 
 \subsection*{Scheduling Queue}
 The scheduling queue is a simple FIFO queue implemented as a wrapper around a doubly-linked list, using the implementation provided in \texttt{list.h}. For both scheduling policies, the functionality of the queue itself is identical, as all policy-specific functionality has been offloaded to the worker-thread control system. The queue structure \texttt{sched\_queue}, typedeffed elsewhere as \texttt{sched\_queue\_t}, is implemented in \texttt{sched\_impl.c}, with all access methods passed as function pointers to the various scheduler implementations. These methods are all synchronized as described in \textbf{\nameref{design:sync}}, and are as follows:
@@ -186,7 +178,6 @@ Our implementation of access control to the scheduling queue uses a very similar
 
 %%% BUGS %%%
 \section*{Known Bugs}
-% TODO
-None known.
+As it turns out, we have one major synchronization error that we did not discover until shortly before the project deadline. It is possible for \texttt{wake\_worker} to be called for a thread before \texttt{wait\_for\_cpu} is, and because \texttt{wake\_worker} does not block, this will alter the order in which threads in the queue are scheduled. This error isn't apparent for \textit{FIFO} scheduling, but for \textit{RR} scheduling, this can cause undefined behavior based on the race condition of the scheduler and the first worker thread. We ran out of time before we were able to fix this issue, but adding a third mutex lock could have easily solved this.
 
 \end{document}
