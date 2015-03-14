@@ -95,15 +95,21 @@ static void leave_sched_queue(thread_info_t *info) {
 }
 
 static void wait_for_cpu(thread_info_t *info) {
+  // Wait for lock, then immediately unlock; we have the CPU!
   if(pthread_mutex_lock(info->has_cpu)) {
     /* Handle mutex lock failure */
+    perror("worker thread wait for cpu");
+  }
+  if(pthread_mutex_unlock(info->has_cpu)) {
+    /* Handle mutex unlock failure */
     perror("worker thread wait for cpu");
   }
 }
 
 static void release_cpu(thread_info_t *info) {
-  if(pthread_mutex_unlock(info->has_cpu)) {
-    /* Handle mutex unlock failure */
+  // Voluntarily lock ourselves out of the CPU
+  if(pthread_mutex_lock(info->has_cpu)) {
+    /* Handle mutex lock failure */
     perror("worker thread release cpu");
   }
 }
