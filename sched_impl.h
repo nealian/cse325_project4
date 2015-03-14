@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #include "list.h"
+#include "scheduler.h"
 
 struct thread_info {
   /* Scheduling queue */
