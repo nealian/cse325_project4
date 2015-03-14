@@ -29,6 +29,12 @@ static void init_thread_info(thread_info_t *info, sched_queue_t *queue) {
 static void destroy_thread_info(thread_info_t *info) {
   info->queue = NULL;
   info->queue_elem = NULL;
+  
+  if(pthread_mutex_destroy(info->has_cpu)) {
+    /* Handle errors on mutex destruction */
+    perror("worker thread mutex destruction");
+  }
+  
   free(info->has_cpu);
   info->has_cpu = NULL;
 }
