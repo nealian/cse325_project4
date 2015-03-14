@@ -17,9 +17,14 @@ static void init_thread_info(thread_info_t *info, sched_queue_t *queue) {
   info->queue = queue;
   info->queue_elem = NULL;
 
+  info->yield_cpu = malloc(sizeof(pthread_mutex_t));
   info->has_cpu = malloc(sizeof(pthread_mutex_t));
-  pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
-  *(info->has_cpu) = m;
+  
+  /* The initializer is a weird macro, so we need this hackey stuff... */
+  pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;
+  *(info->yield_cpu) = m1;
+  pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;
+  *(info->has_cpu) = m2;
   if(pthread_mutex_lock(info->has_cpu)) {
     /* Handle mutex lock failure */
     perror("worker thread wait for cpu");
@@ -30,13 +35,16 @@ static void destroy_thread_info(thread_info_t *info) {
   info->queue = NULL;
   info->queue_elem = NULL;
   
-  if(pthread_mutex_destroy(info->has_cpu)) {
+  if(pthread_mutex_destroy(info->has_cpu)
+     || pthread_mutex_destroy(info->yield_cpu)) {
     /* Handle errors on mutex destruction */
     perror("worker thread mutex destruction");
   }
-  
+
   free(info->has_cpu);
+  free(info->yield_cpu);
   info->has_cpu = NULL;
+  info->yield_cpu = NULL;
 }
 
 static void enter_sched_queue(thread_info_t *info) {
@@ -101,21 +109,17 @@ static void leave_sched_queue(thread_info_t *info) {
 }
 
 static void wait_for_cpu(thread_info_t *info) {
-  // Wait for lock, then immediately unlock; we have the CPU!
+  /* Wait for CPU lock to release */
   if(pthread_mutex_lock(info->has_cpu)) {
     /* Handle mutex lock failure */
-    perror("worker thread wait for cpu");
-  }
-  if(pthread_mutex_unlock(info->has_cpu)) {
-    /* Handle mutex unlock failure */
     perror("worker thread wait for cpu");
   }
 }
 
 static void release_cpu(thread_info_t *info) {
-  // Voluntarily lock ourselves out of the CPU
-  if(pthread_mutex_lock(info->has_cpu)) {
-    /* Handle mutex lock failure */
+  /* Unlock thread yield */
+  if(pthread_mutex_unlock(info->yield_cpu)) {
+    /* Handle mutex unlock failure */
     perror("worker thread release cpu");
   }
 }

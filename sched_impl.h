@@ -11,8 +11,9 @@ struct thread_info {
   sched_queue_t* queue;
   list_elem_t* queue_elem;
 
-  /* Resource-lock the CPU against this thread; it's unlocked when it's available */
-  pthread_mutex_t* has_cpu;
+  /* Resource-lock the CPU against this thread */
+  /* When CPU is available, has_cpu is unlocked and yield_cpu is locked */
+  pthread_mutex_t* has_cpu, * yield_cpu;
 };
 
 struct sched_queue {
