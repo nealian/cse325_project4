@@ -33,6 +33,11 @@ void rr_wait(sched_queue_t *queue) {
       if(queue_elem) {
         new_head_info = (thread_info_t *) queue_elem->datum;
 
+        if(pthread_mutex_unlock(queue->access_mutex)) {
+          /* Handle mutex unlock failure */
+          perror("round robin wait queue mutex unlock");
+        }
+
         if(pthread_mutex_lock(new_head_info->yield_cpu)) {
           /* Handle mutex lock failure */
           perror("round robin wait cpu yield mutex lock");
@@ -40,11 +45,6 @@ void rr_wait(sched_queue_t *queue) {
       } else {
         /* Where did it go in the last milliseconds?!? (Shouldn't happen) */
         perror("round robin wait has worker");
-      }
-
-      if(pthread_mutex_unlock(queue->access_mutex)) {
-        /* Handle mutex unlock failure */
-        perror("round robin wait queue mutex unlock");
       }
 
     } else {
