@@ -16,10 +16,21 @@ static void init_thread_info(thread_info_t *info, sched_queue_t *queue) {
 
   info->queue = queue;
   info->queue_elem = NULL;
+
+  info->has_cpu = malloc(sizeof(pthread_mutex_t));
+  pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+  *(info->has_cpu) = m;
+  if(pthread_mutex_lock(info->has_cpu)) {
+    /* Handle mutex lock failure */
+    perror("worker thread wait for cpu");
+  }
 }
 
 static void destroy_thread_info(thread_info_t *info) {
-  // TODO
+  info->queue = NULL;
+  info->queue_elem = NULL;
+  free(info->has_cpu);
+  info->has_cpu = NULL;
 }
 
 static void enter_sched_queue(thread_info_t *info) {
@@ -39,7 +50,7 @@ static void enter_sched_queue(thread_info_t *info) {
         /* Handle semaphore unlock failure */
         perror("scheduling queue consumption unlock");
       }
-      
+
       if(pthread_mutex_unlock(info->queue->access_mutex)) {
         /* Handle mutex unlock failure */
         perror("scheduling queue access mutex unlock");
@@ -61,13 +72,13 @@ static void leave_sched_queue(thread_info_t *info) {
     if(!pthread_mutex_lock(info->queue->access_mutex)) {
       list_remove_elem(info->queue->list, info->queue_elem);
       free(info->queue_elem);
-      
+
       /* Having freed up space in the queue, unlock production semaphore */
       if(sem_post(info->queue->production)) {
         /* Handle semaphore unlock failure */
         perror("scheduling queue production unlock");
       }
-      
+
       if(pthread_mutex_unlock(info->queue->access_mutex)) {
         /* Handle mutex unlock failure */
         perror("scheduling queue access mutex unlock");
@@ -84,11 +95,17 @@ static void leave_sched_queue(thread_info_t *info) {
 }
 
 static void wait_for_cpu(thread_info_t *info) {
-  // TODO
+  if(pthread_mutex_lock(info->has_cpu)) {
+    /* Handle mutex lock failure */
+    perror("worker thread wait for cpu");
+  }
 }
 
 static void release_cpu(thread_info_t *info) {
-  // TODO
+  if(pthread_mutex_unlock(info->has_cpu)) {
+    /* Handle mutex unlock failure */
+    perror("worker thread release cpu");
+  }
 }
 /* End worker thread ops block */
 
